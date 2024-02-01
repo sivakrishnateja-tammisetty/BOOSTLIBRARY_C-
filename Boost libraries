@@ -5,7 +5,18 @@ The source code is released under the Boost Software License, which allows anyon
 The libraries are platform independent and support most popular compilers, as well as many that are less well known.
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                                                               1. RAII and Memory Management
+                                                              PART 1. RAII and Memory Management
+
+
+
+
+
+
+==> chapter 1:
+
+
+
+
 
 
 
@@ -16,26 +27,251 @@ The libraries are platform independent and support most popular compilers, as we
 
 1.1 Boost.SmartPointers:
     --------------------
+
   *Boost.SmartPointers defines smart pointers. Some of them are provided by the C++11 standard library. Others are only available in Boost.
 
   *The library Boost.SmartPointers provides various smart pointers. They help you manage dynamically allocated objects.
     There can’t be a memory leak if, for example, you forget to call delete.
 
-  sole Owner ship
+  1.1.1 sole Owner ship:
+  --------------------- 
+                       1.1.1.a -->boost::scoped_ptr: Boost::scoped_ptr is a smart pointer that is the sole owner of a dynamically allocated object.
+                                              boost::scoped_ptr cannot be copied or moved. This smart pointer is defined in the header file boost/scoped_ptr.hpp.
+
+
+                                         #include <boost/scoped_ptr.hpp>
+                                         #include <iostream>
+
+                                        int main() {
+                                        // Creating a scoped_ptr and initializing it with a dynamically allocated integer with value 1
+                                        boost::scoped_ptr<int> p{new int{1}};
+    
+                                      // Printing the value pointed by p
+                                      std::cout << *p << '\n';  // Output: 1
+    
+                                    // Resetting the scoped_ptr to point to a new dynamically allocated integer with value 2
+                                    p.reset(new int{2});
+    
+                                    // Printing the value pointed by p using get()
+                                    std::cout << *p.get() << '\n';  // Output: 2
+    
+                                    // Resetting the scoped_ptr to release ownership (deletes the managed object)
+                                    p.reset();
+    
+                                    // Checking if the scoped_ptr is now nullptr (after reset)
+                                      std::cout << std::boolalpha << static_cast<bool>(p) << '\n';  // Output: false
+                                            }
+
+                                      Note: reset() is called allocated object will destory and new object address is allocated &&  get() returns address of the object.
+
+
+
+                            1.1.1.b  scoped_array:
+                                                  For array boost provides boost::scoped_arrays.
+                                                  scoped_array is a smart pointer designed to manage the lifetime of a dynamically allocated array. It automatically releases the memory for the array when it goes out of scope.
+                                                  It was present in  boost/scoped_array.hpp
+
+
+                                                  Eg:
+                                                    #include <boost/scoped_array.hpp>
+
+                                                    int main() {
+                                                      // Creating a scoped_array and initializing it with a dynamically allocated integer array of size 2
+                                                        boost::scoped_array<int> p{new int[2]};
+    
+                                                            // Assigning values to the elements of the array using get() and array indexing
+                                                                *p.get() = 1;  // Equivalent to p[0] = 1;
+                                                              p[1] = 2;      // Assigning value 2 to the second element of the array (index 1)
+
+                                                                    // Resetting the scoped_array to point to a new dynamically allocated integer array of size 3
+                                                                      p.reset(new int[3]);
+    
+                                                                        // At the end of the scope, the scoped_array will automatically release the memory for the dynamically allocated array
+                                                                        }
+
+
+1.1.2 shared ownership:
+-----------------------
+                  1.1.2.1  boost::shared_ptr ==> shared_ptr is a smart pointer that provides shared ownership of dynamically allocated objects, and it uses a reference counting mechanism to keep track of the number of shared_ptr instances pointing to the same object.
+
+                            Eg:
+                            #include <boost/shared_ptr.hpp>
+                            #include <iostream>
+
+                            int main() {
+                                // Creating a shared_ptr and initializing it with a dynamically allocated integer with value 1
+                                boost::shared_ptr<int> p1{new int{1}};
+    
+                                  // Printing the value pointed by p1
+                                    std::cout << *p1 << '\n';  // Output: 1
+    
+                                  // Creating a new shared_ptr (p2) and initializing it with the same object as p1
+                                  boost::shared_ptr<int> p2{p1};
+    
+                                // Resetting p1 to point to a new dynamically allocated integer with value 2
+                                p1.reset(new int{2});
+    
+                            // Printing the value pointed by p1 using get()
+                              std::cout << *p1.get() << '\n';  // Output: 2
+    
+                            // Resetting p1 to release ownership (decreases reference count)
+                              p1.reset();
+    
+                          // Checking if p2 still owns the object (reference count is greater than zero)
+                          std::cout << std::boolalpha << static_cast<bool>(p2) << '\n';  // Output: true
+                                }
 
 
 
 
-1.2 Boost.PointerContainer:
-    ------------------------
+
+
+
+                1.1.2.2 boost::make_shared ==>boost::make_shared to create boost::shared_ptr instances and demonstrates its usage with different types of allocations.
+
+                       Eg:
+                            #include <boost/make_shared.hpp>
+                            #include <typeinfo>
+                            #include <iostream>
+
+                            int main() {
+                               // Creating a shared_ptr and initializing it with a dynamically allocated integer with value 1
+                               auto p1 = boost::make_shared<int>(1);
+
+                               // Printing the type information of p1
+                                 std::cout << typeid(p1).name() << '\n';  
+                                  // Output: N5boost10shared_ptrIiEE
+
+                                     // Creating a shared_ptr for an array of integers with size 10
+                                     auto p2 = boost::make_shared<int[]>(10);
+
+                                       // Printing the type information of p2
+                                     std::cout << typeid(p2).name() << '\n';  
+                                            // Output: N5boost10shared_ptrIiE
+
+                                              // Note: The output of typeid().name() is compiler-dependent, and the actual string may vary.
+                                           }
+
+
+
+
+
+
+
+1.1.3 special smart pointers:
+                           1.1.31.  boost::weak_ptr ==> boost::weak_ptr is used to observe the shared pointer's state without affecting its reference count, 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==>chapter 2:
+
+
+ Boost.PointerContainer:
+ ----------------------
   *Boost.PointerContainer defines containers to store dynamically allocated objects – objects that are created with new. 
     Because the containers from this library destroy objects with delete in the destructor, no smart pointers need to be used.
+
+
+
+         Eg:using ptr_vector
+
+
+          #include <boost/ptr_container/ptr_vector.hpp>
+          #include <iostream>
+
+         int main()
+         {
+           boost::ptr_vector<int> v;
+          v.push_back(new int{1});
+          v.push_back(new int{2});
+          std::cout << v.back() << '\n';
+         }
+
+
+      NOTE:
+           boost::ptr_vector automatically takes care of deleting the dynamically allocated objects when the vector is destroyed. This is one of the advantages of using ptr_vector in situations where you need a container of pointers with automatic memory management.
+
+
+
+
+==>chapter 3:
+
 
 1.3 Boost.ScopeExit:
     ----------------
   *Boost.ScopeExit makes it possible to use the RAII idiom for any resources. While Boost.SmartPointers and Boost.
   PointerContainer can only be used with pointers to dynamically allocated objects, with Boost.ScopeExit no resource-specific classes need to be used.
 
-1.4 Boost.Pool:
+
+
+
+==>chapter 4:
+
+4 Boost.Pool:
    ------------
   *Boost.Pool has nothing to do with RAII, but it has a lot to do with memory management. This library defines numerous classes to provide memory to your program faster.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                                                              PART 2: STRING HANDLING
+
+==> Chapter 5[Boost.StringAlgorithms]:
+
+
+*Boost.StringAlgorithms ->defines many algorithms specifically for strings. For example, you will find algorithms to convert strings to lower or upper case.
+
+
+              Eg1: COnverting strings to upper case
+
+                   * to_upper_copy function to create a new string with all characters converted to uppercase.
+
+                    #include <boost/algorithm/string.hpp>
+                    #include <string>
+                    #include <iostream>
+
+                    using namespace boost::algorithm;
+
+                    int main()
+                    {
+                                std::string s = "Boost C++ Libraries";
+                                std::cout << to_upper_copy(s) << '\n';
+                      }
+
+                   o/p: BOOST C++ LIBRARIES
+
+
+
+
+                   Eg1: COnverting strings to lower case
+
+                   * to_lower_copy function to create a new string with all characters converted to lowercase.
+
+                    #include <boost/algorithm/string.hpp>
+                    #include <string>
+                    #include <iostream>
+
+                    using namespace boost::algorithm;
+
+                    int main()
+                    {
+                                std::string s = "Boost C++ Libraries";
+                                std::cout << to_lower_copy(s) << '\n';
+                      }
+
+                   o/p: boost c++ libraries
+
+
+
+          NOTE:To convert the string in place, use the functions boost::algorithm::to_upper() or boost::algorithm::to_lower(
+
